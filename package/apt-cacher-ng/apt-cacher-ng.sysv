@@ -1,0 +1,99 @@
+#!/bin/sh
+# Copyright 1999-2015 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+#
+# Start apt-cacher-ng.
+#
+# Based on Gentoo's init script (OpenRC).
+#
+RC_SVCNAME=apt-cacher-ng
+
+DAEMON="/usr/sbin/${RC_SVCNAME}"
+RUNDIR="/var/run/${RC_SVCNAME}"
+CACHEDIR="/var/cache/${RC_SVCNAME}"
+PIDFILE="${RUNDIR}/${RC_SVCNAME}.pid"
+SOCKETPATH="${RUNDIR}/${RC_SVCNAME}.socket"
+DAEMON_OPTS="${DAEMON_OPTS-} \
+pidfile=${PIDFILE} SocketPath=${SOCKETPATH} foreground=0"
+
+
+start_pre() {
+   mkdir -p -m 0755 -- "${RUNDIR}" && \
+   chown -h -- "${RC_SVCNAME}:${RC_SVCNAME}" "${RUNDIR}" && \
+   \
+   mkdir -p -m 0755 -- "${CACHEDIR}" && \
+   chown -h -- "${RC_SVCNAME}:${RC_SVCNAME}" "${CACHEDIR}"
+}
+
+start() {
+   printf '%s\n' "Starting ${RC_SVCNAME}"
+
+   if ! start_pre; then
+      printf '%s\n' "Failed to create essential directories."
+      rc=5
+
+   elif start-stop-daemon -S -q \
+      -x "${DAEMON}" \
+      -c "${RC_SVCNAME}:${RC_SVCNAME}" \
+      -p "${PIDFILE}" \
+      -- ${DAEMON_OPTS}
+   then
+      rc=0
+
+   else
+      rc=${?}
+      printf '%s\n' "Failed to start ${RC_SVCNAME}" 1>&2
+   fi
+
+   return ${rc}
+}
+
+stop() {
+   printf '%s\n' "Stopping ${RC_SVCNAME}"
+
+   if start-stop-daemon -K -q -x "${DAEMON}" -p "${PIDFILE}"; then
+      rc=0
+   else
+      rc=${?}
+      printf '%s\n' "Failed to stop ${RC_SVCNAME}" 1>&2
+   fi
+
+   return ${rc}
+}
+
+get_status() {
+   start-stop-daemon -K -q -t -x "${DAEMON}" -p "${PIDFILE}"
+}
+
+status() {
+   if get_status; then
+      printf '%s\n' "running"
+      return 0
+   else
+      printf '%s\n' "stopped"
+      return 1
+   fi
+}
+
+case "${1}" in
+   stop|status)
+      ${1}
+   ;;
+   start)
+      [ -x "${DAEMON}" ] || exit 5
+      ${1}
+   ;;
+   restart|condrestart)
+      [ -x "${DAEMON}" ] || exit 5
+      if get_status; then
+         stop
+      elif [ "${1}" = "condrestart" ]; then
+         exit 0
+      fi
+      start
+   ;;
+   *)
+      printf '%s\n' "Usage: ${0} start|stop|restart|status|condrestart" 1>&2
+      exit 64
+   ;;
+esac

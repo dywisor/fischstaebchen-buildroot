@@ -1,0 +1,20 @@
+menuconfig BR2_PACKAGE_HACKS
+	bool "hacks"
+
+if BR2_PACKAGE_HACKS
+
+config BR2_PACKAGE_HACKS_DROP_BUSYBOX_SYMLINKS
+	bool "remove busybox symlinks"
+
+	depends on BR2_PACKAGE_BUSYBOX
+
+config BR2_PACKAGE_HACKS_INITRAMFS_PURGE
+	bool "remove files not needed for initramfs"
+
+config BR2_PACKAGE_HACKS_MISC_DOWNSIZE
+	bool "remove misc unneeded programs"
+
+config BR2_PACKAGE_HACKS_UTIL_LINUX_DOWNSIZE
+	bool "remove unneeded programs installed by util-linux"
+
+endif # BR2_PACKAGE_HACKS

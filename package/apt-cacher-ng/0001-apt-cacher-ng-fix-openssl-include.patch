@@ -1,0 +1,19 @@
+diff -Nur3 a/source/apt-cacher.cc b/source/apt-cacher.cc
+--- a/source/apt-cacher.cc	2014-10-20 22:44:16.000000000 +0200
++++ b/source/apt-cacher.cc	2015-02-21 20:07:23.012515824 +0100
+@@ -1,7 +1,6 @@
+ #include <acbuf.h>
+ #include <aclogger.h>
+ #include <fcntl.h>
+-#include <openssl/evp.h>
+ #include <stddef.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
+@@ -37,6 +36,7 @@
+ #include "openssl/bio.h"
+ #include "openssl/ssl.h"
+ #include "openssl/err.h"
++#include <openssl/evp.h>
+ #include <openssl/rand.h>
+ #include <openssl/sha.h>
+ #include <openssl/crypto.h>

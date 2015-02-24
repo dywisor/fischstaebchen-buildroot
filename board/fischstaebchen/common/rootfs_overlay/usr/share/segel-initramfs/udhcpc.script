@@ -1,0 +1,107 @@
+#!/bin/sh
+BB=/bin/busybox
+
+[ -n "${1-}" ] || exit 64
+
+DEFAULT_IFS="$IFS"
+
+RESOLV_CONF=/run/resolv.conf
+mkdir -p -- "${RESOLV_CONF}.d" || true
+
+if test ! -h /etc/resolv.conf; then
+   if test -s /etc/resolv.conf; then
+      $BB mv -f -- /etc/resolv.conf /etc/resolv.conf.old
+   fi
+
+   $BB rm -f -- /etc/resolv.conf
+   $BB ln -f -s -- $RESOLV_CONF /etc/resolv.conf
+fi
+
+if [ -n "${cidr-}" ]; then
+   :
+elif [ -z "${subnet-}" ]; then
+   cidr=24
+else
+   cidr=0
+   IFS=.
+   for block in $subnet; do
+      IFS="$DEFAULT_IFS"
+      case "$block" in
+         255)
+            cidr=$(( $cidr + 8 ))
+         ;;
+         *)
+            while [ $block -gt 0 ]; do
+               if [ $(( $block &1 )) -eq 1 ]; then
+                  cidr=$(( $cidr + 1 ))
+               fi
+               block=$(( $block >> 1 ))
+            done
+         ;;
+      esac
+   done
+   IFS="$DEFAULT_IFS"
+fi
+
+
+
+__ip__() { $BB ip -4 "$@"; }
+
+ip_cmd() {
+   local cmd subcmd
+   cmd="${1:?}"; shift
+   subcmd="${1:?}"; shift
+   __ip__ ${cmd} ${subcmd} dev ${interface} "$@"
+}
+
+
+gen_resolv_conf() {
+   local f
+   for f in "${RESOLV_CONF}.d/"*; do
+      [ -f "${f}" ] || continue
+      cat "${f}"
+   done > "${RESOLV_CONF}"
+}
+
+
+case "${1}" in
+   deconfig)
+      ip_cmd link set up
+
+      ip_cmd addr flush scope global
+      ip_cmd addr flush scope site
+      [ "${interface}" = "lo" ] || ip_cmd addr flush scope host
+
+      rm -f "${RESOLV_CONF}.d/${interface}"
+      gen_resolv_conf
+   ;;
+
+   renew|bound)
+      ip_cmd link set up
+      __ip__ addr add ${ip}/${cidr} \
+         ${broadcast:+broadcast} ${broadcast-} dev ${interface}
+
+      for r in ${router-}; do
+         # yeah, we don't support more than one router
+         case "${r}" in
+            *.*.*.*)
+               __ip__ route replace default via ${r} dev "${interface}"
+               break
+            ;;
+         esac
+      done
+
+      rm -f -- "${RESOLV_CONF}.d/${interface}"
+      {
+         [ -z "${domain-}" ] || printf "search %s\n" "${domain}"
+
+         for d in ${dns-}; do
+            printf "nameserver %s\n" "${d}"
+         done
+      } > "${RESOLV_CONF}.d/${interface}"
+
+      gen_resolv_conf
+   ;;
+esac
+
+exit 0

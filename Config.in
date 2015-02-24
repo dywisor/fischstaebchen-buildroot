@@ -1,0 +1,6 @@
+source "$BR2_EXTERNAL/package/apt-cacher-ng/Config.in"
+source "$BR2_EXTERNAL/package/hacks/Config.in"
+
+menu "fischstaebchen"
+	source "$BR2_EXTERNAL/package/fischstaebchen/Config.in"
+endmenu

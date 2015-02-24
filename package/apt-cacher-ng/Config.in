@@ -1,0 +1,38 @@
+config BR2_PACKAGE_APT_CACHER_NG
+   bool "apt-cacher-ng"
+
+   depends on BR2_INSTALL_LIBSTDCPP
+
+   help
+      A caching proxy.
+
+      Specialized for package files from Linux distributors, primarily
+      for Debian (and Debian based) distributions but not limited to those.
+
+      Optional dependencies:
+
+       o zlib
+       o xz
+       o bzip2
+       o openssl
+
+      https://www.unix-ag.uni-kl.de/~bloch/acng/
+
+if BR2_PACKAGE_APT_CACHER_NG
+
+comment "acngfs needs libfuse, which needs a toolchain w/ largefile, threads, dynamic library"
+   depends on ( \
+      BR2_STATIC_LIBS || !BR2_LARGEFILE || !BR2_TOOLCHAIN_HAS_THREADS || \
+      !BR2_USE_MMU )
+
+config BR2_PACKAGE_APT_CACHER_NG_ACNGFS
+   bool "acngfs"
+
+   select BR2_PACKAGE_LIBFUSE
+   ## propagated dependencies:
+   depends on !BR2_STATIC_LIBS
+   depends on BR2_LARGEFILE
+   depends on BR2_TOOLCHAIN_HAS_THREADS
+   depends on BR2_USE_MMU # fork()
+
+endif # BR2_PACKAGE_APT_CACHER_NG

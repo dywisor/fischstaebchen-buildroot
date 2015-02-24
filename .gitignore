@@ -1,0 +1,29 @@
+!.gitignore
+
+# python bytecode files
+*.py[cdo]
+
+# auto backup files
+*~
+~*
+*.sw[a-z]
+*.bak*
+
+# temporary dirs (build etc)
+/build
+/tmp
+/dist
+/release
+
+# setup.py related files
+/MANIFEST
+*.egg-info
+
+# local files
+/local
+*.local
+*.local.*
+
+
+# files/dirs to ignore
+.keep

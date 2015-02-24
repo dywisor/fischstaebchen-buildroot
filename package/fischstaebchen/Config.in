@@ -1,0 +1,406 @@
+# FIXME: "weak" dep on PROG_UNTAR (would at runtime depending on boot params)
+
+comment "fischstaebchen needs busybox or coreutils and util-linux"
+	depends on !BR2_PACKAGE_BUSYBOX && ! ( \
+			BR2_PACKAGE_UTIL_LINUX && BR2_PACKAGE_COREUTILS )
+
+comment "fischstaebchen-init needs busybox or e2fsprogs w/ mkfs.ext[24]"
+	depends on !BR2_PACKAGE_BUSYBOX && !BR2_PACKAGE_E2FSPROGS_MKE2FS
+
+config BR2_PACKAGE_FISCHSTAEBCHEN
+	bool
+
+config BR2_PACKAGE_FISCHSTAEBCHEN_INITRAMFS
+	bool "initramfs"
+
+	depends on BR2_USE_MMU # fork()
+	depends on BR2_PACKAGE_BUSYBOX || ( \
+		BR2_PACKAGE_UTIL_LINUX && BR2_PACKAGE_COREUTILS )
+	depends on BR2_PACKAGE_BUSYBOX || BR2_PACKAGE_E2FSPROGS_MKE2FS
+
+	select BR2_PACKAGE_FISCHSTAEBCHEN_INIT
+	select BR2_PACKAGE_FISCHSTAEBCHEN_INIT_INIT
+	select BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY
+	select BR2_PACKAGE_FISCHSTAEBCHEN
+
+	help
+		Fischstaebchen initramfs (init + overlay).
+
+menuconfig BR2_PACKAGE_FISCHSTAEBCHEN_INIT
+	bool "progs"
+
+	select BR2_PACKAGE_FISCHSTAEBCHEN
+
+	help
+		Fischstaebchen's binaries, e.g. init.
+
+if BR2_PACKAGE_FISCHSTAEBCHEN_INIT
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_INIT_INIT
+		bool "init"
+
+		default y
+		depends on BR2_USE_MMU # fork()
+		depends on BR2_PACKAGE_BUSYBOX || ( \
+			BR2_PACKAGE_UTIL_LINUX && BR2_PACKAGE_COREUTILS )
+		depends on BR2_PACKAGE_BUSYBOX || BR2_PACKAGE_E2FSPROGS_MKE2FS
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_INIT_FILESCAN
+		bool "filescan"
+
+		default y
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_INIT_FILESIZE
+		bool "filesize"
+
+		default y
+
+	comment "untar needs tar (from busybox or package)"
+		depends on !BR2_PACKAGE_BUSYBOX && !BR2_PACKAGE_TAR
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_INIT_UNTAR
+		bool "untar"
+
+		default y
+		depends on BR2_USE_MMU # fork()
+		depends on BR2_PACKAGE_BUSYBOX || BR2_PACKAGE_TAR
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_INIT_ZRAM_TOOLS
+		bool "ztmpfs / zdisk"
+
+		depends on BR2_USE_MMU # fork()
+		depends on BR2_PACKAGE_BUSYBOX || ( \
+			BR2_PACKAGE_UTIL_LINUX && BR2_PACKAGE_COREUTILS )
+		depends on BR2_PACKAGE_BUSYBOX || BR2_PACKAGE_E2FSPROGS_MKE2FS
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_INIT_CREATE_USER_TMPDIRS
+		bool "create-user-tmpdirs"
+
+
+menu "Config"
+
+if BR2_PACKAGE_FISCHSTAEBCHEN_INIT_INIT || BR2_PACKAGE_FISCHSTAEBCHEN_INIT_ZRAM
+menu "zram options"
+
+	choice
+		prompt "zram compression"
+		default BR2_PACKAGE_FISCHSTAEBCHEN_ZRAM_COMP_LZ4
+
+		config BR2_PACKAGE_FISCHSTAEBCHEN_ZRAM_COMP_LZ4
+			bool "lz4"
+
+		config BR2_PACKAGE_FISCHSTAEBCHEN_ZRAM_COMP_LZO
+			bool "lzo"
+	endchoice
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ZRAM_DISK_MAKESYM
+		bool "create zram disk symlinks in /dev"
+
+		default y
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ZRAM_CLAIM_CHECK_INITSTATE
+		bool "check initstate before claiming a zram device"
+
+		default y
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ZRAM_SET_COMPRESSION_AFTER_CLAIM
+		bool "set zram compression after claiming the device"
+
+		default y
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ZRAM_DISK_ENABLE_EXT2
+		bool "use mkfs.ext2 from busybox"
+
+		default y
+		depends on BR2_PACKAGE_BUSYBOX
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ZRAM_DISK_ENABLE_EXT2_EXTERN
+		bool "use mkfs.ext2 from e2fsprogs"
+
+		default y
+		depends on BR2_PACKAGE_E2FSPROGS_MKE2FS
+
+	comment "ext4-formatted zram disks need e2fsprogs w/ mkfs.ext4"
+		depends on !BR2_PACKAGE_E2FSPROGS_MKE2FS
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ZRAM_DISK_ENABLE_EXT4
+		bool "use mkfs.ext4"
+
+		default y
+		depends on BR2_PACKAGE_E2FSPROGS_MKE2FS
+
+	comment "btrfs-formatted zram disks need btrfs-progs"
+		depends on !BR2_PACKAGE_BTRFS_PROGS
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ZRAM_DISK_ENABLE_BTRFS
+		bool "use mkfs.btrfs"
+
+		default y
+		depends on BR2_PACKAGE_BTRFS_PROGS
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ZRAM_DISK_PREFER_BTRFS
+		bool "prefer btrfs over ext2/4"
+
+		depends on BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ZRAM_DISK_ENABLE_BTRFS
+
+endmenu # zram options
+endif
+
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_DEFAULT_PATH
+		string
+
+		default "/sbin:/usr/sbin:/bin:/usr/bin"
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ENABLE_BUSYBOX
+		bool "use busybox applets"
+
+		default y
+		depends on BR2_PACKAGE_BUSYBOX
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_USE_EXTERN_FINDFS
+		bool "prefer findfs from util-linux over busybox' applet"
+
+		default y
+		depends on BR2_PACKAGE_UTIL_LINUX_BINARIES
+
+		help
+			Required for mounting disks by PARTUUID.
+
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ENABLE_DEVTMPFS
+		bool "use devtmpfs"
+
+		default y
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ENABLE_MDEV
+		bool "use mdev"
+
+		default y
+		depends on BR2_PACKAGE_BUSYBOX
+
+if BR2_PACKAGE_FISCHSTAEBCHEN_CFG_ENABLE_MDEV
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_MDEV_SEQ
+		bool "run mdev in sequential mode"
+
+		default y
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_CFG_MDEV_LOG
+		bool "run mdev in logged mode"
+
+endif
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_DEVFS_TTY_GID
+		string "id of the tty group"
+		default "5"
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_DEVFS_DISK_GID
+		string "id of the disk group"
+		default "6"
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_DEVFS_CDROM_GID
+		string "id of the cdrom group"
+		default "0"
+
+endmenu
+
+endif # BR2_PACKAGE_FISCHSTAEBCHEN_INIT
+
+config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY
+	bool "overlay"
+
+	depends on BR2_PACKAGE_BUSYBOX || ( \
+		BR2_PACKAGE_UTIL_LINUX && BR2_PACKAGE_COREUTILS )
+	select BR2_PACKAGE_FISCHSTAEBCHEN
+
+	help
+		Fischstaebchen's initramfs files (shell scripts etc.).
+
+if BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY
+menu "select overlays"
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_BASE
+		bool
+
+		default y
+
+		help
+			Hook script logic, essential functions, networking.
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_SEPARATE_USR
+		bool
+
+		default y
+
+		help
+			Empty overlay.
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_PHASEOUT
+		bool "phaseout"
+
+		default y
+
+		help
+			Advanced hook script logic,
+			required for sub-phases fetching scripts on-the-fly.
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_UNION_MOUNT_BASE
+		bool "union_mount base"
+
+		default y
+
+		help
+			Contains everything required for defining a custom union mount layout.
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_UNION_MOUNT
+		bool "union_mount"
+
+		default y
+		select BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_UNION_MOUNT_BASE
+
+		help
+			Default union mount layouts - volatile_rootfs, squashed_usr, etc.
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_STAGEDIVE
+		bool "stagedive"
+
+		default y
+		select BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_PHASEOUT
+		select BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_UNION_MOUNT
+		select BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_UNION_MOUNT_BASE
+
+		help
+			Set up a live system - networking, passwd, live user, ....
+
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_DOTFILES
+		bool "dotfiles"
+
+		default y
+
+		depends on BR2_USE_MMU # fork()
+		depends on BR2_PACKAGE_BUSYBOX || BR2_PACKAGE_TAR
+		select BR2_PACKAGE_FISCHSTAEBCHEN_INIT
+		select BR2_PACKAGE_FISCHSTAEBCHEN_INIT_UNTAR
+
+		help
+			Allows to fetch system and user config files during boot.
+
+			When used with "stagedive", allows to install these files
+			during bootstrap and/or setup.
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_SQUASHED_ROOTFS
+		bool "sfsroot import"
+
+		default y
+
+		help
+			Boot a system where rootfs is empty and /usr/rootfs contains
+			files (and optionally setup instructions) for creating essentials
+			files/dirs/links in /.
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_NEWROOT_HOOKS
+		bool "newroot hooks"
+
+		default y
+
+		help
+			Runs scripts from the target rootfs during boot.
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_MISC
+		bool "misc"
+
+		default y
+
+		help
+			Contains a few non-essential hooks:
+
+			* load CPU microcode
+			* transfer initramfs logfile to the <rootfs>
+			* create all mountpoints in <rootfs>
+			* copy kernel modules/firmare to <rootfs>
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_CUSTOM_LIST
+		string "additional overlays"
+
+		default ""
+
+		help
+			This option is useless. FIXME REMOVE THIS OPTION
+
+endmenu
+
+if BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_STAGEDIVE
+
+
+menu "select stagedive bootstrap targets"
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_STAGEDIVE_BOOTSTRAP_ARCH
+		bool "Arch Linux"
+
+		default y
+
+		depends on BR2_i386 || BR2_x86_64
+		depends on BR2_USE_MMU # fork()
+		depends on BR2_PACKAGE_BUSYBOX || BR2_PACKAGE_TAR
+		select BR2_PACKAGE_FISCHSTAEBCHEN_INIT
+		select BR2_PACKAGE_FISCHSTAEBCHEN_INIT_UNTAR
+
+		help
+			Fetch an Arch Linux bootstrap image, bootstrap the target system,
+			install additional packages, boot it.
+
+			Features a complete openbox-based live system.
+
+			Can also  boot into the bootstrap image.
+
+			Big and x86/x86_64 only.
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_STAGEDIVE_BOOTSTRAP_GENTOO
+		bool "Gentoo stage3"
+
+		default y
+
+		depends on BR2_USE_MMU # fork()
+		depends on BR2_PACKAGE_BUSYBOX || BR2_PACKAGE_TAR
+		select BR2_PACKAGE_FISCHSTAEBCHEN_INIT
+		select BR2_PACKAGE_FISCHSTAEBCHEN_INIT_UNTAR
+
+		help
+			Fetch the latest stage3 tarball from the official mirrors and boot it.
+
+			Supports various arches and is rather small.
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_CFG_OFFENSIVE
+		bool "allow offensive actions"
+
+		help
+			Certain taks, e.g. repeatedly downloading the same file(s)
+			from a server might be considered inappropriate by the owner
+			and can lead to a (usually temporary) ban, not to mention the huge
+			waste of bandwidth on both ends.
+
+			The bootstrap scripts will be unable to fetch files directly
+			(from official mirrors) if this option is not set.
+			You'll have to use an proxy, e.g. apt-cacher-ng or specify the
+			full file uri ("http://here/i/go").
+
+			Leave this option as-is (n) if apt-cacher-ng is running on the
+			local net and you want to ensure that a proxy is always used when
+			downloading images/packages.
+
+			Consider installing apt-cacher-ng before setting this option to y.
+
+endmenu
+endif # BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_STAGEDIVE
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_TELINIT
+		bool "install telinit"
+
+		default y
+
+		help
+			Install the default "telinit" script,
+			which takes care of bringing down networking, unmounting disks etc.
+
+endif # BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY
