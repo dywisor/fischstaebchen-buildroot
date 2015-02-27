@@ -5,7 +5,7 @@
 ################################################################################
 
 FISCHSTAEBCHEN_VERSION         = 0.1
-FISCHSTAEBCHEN_LIVEVER_REF     = $(FISCHSTAEBCHEN_VERSION)
+FISCHSTAEBCHEN_LIVEVER_REF     = v$(FISCHSTAEBCHEN_VERSION)
 #FISCHSTAEBCHEN_LIVEVER_REF     = <sha>
 FISCHSTAEBCHEN_SOURCE          = fischstaebchen-$(FISCHSTAEBCHEN_LIVEVER_REF).tar.gz
 FISCHSTAEBCHEN_SITE            = $(call github,dywsisor,fischstaebchen,$(FISCHSTAEBCHEN_LIVEVER_REF))
