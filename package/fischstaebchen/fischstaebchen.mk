@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-FISCHSTAEBCHEN_VERSION         = 0.1.1
+FISCHSTAEBCHEN_VERSION         = 0.1.5
 FISCHSTAEBCHEN_LIVEVER_REF     = v$(FISCHSTAEBCHEN_VERSION)
 #FISCHSTAEBCHEN_LIVEVER_REF     = <sha>
 FISCHSTAEBCHEN_SOURCE          = fischstaebchen-$(FISCHSTAEBCHEN_LIVEVER_REF).tar.gz
