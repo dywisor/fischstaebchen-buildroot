@@ -289,8 +289,8 @@ menu "select overlays"
 			When used with "stagedive", allows to install these files
 			during bootstrap and/or setup.
 
-	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_SQUASHED_ROOTFS
-		bool "sfsroot import"
+	config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY_USR_ROOTFS
+		bool "rootfs in /usr"
 
 		default y
 
