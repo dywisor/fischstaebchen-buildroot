@@ -225,7 +225,7 @@ menu "select functions"
 		help
 			Base functions.
 
-
+endmenu
 endif # BR2_PACKAGE_FISCHSTAEBCHEN_SHELL_FUNCTIONS
 
 config BR2_PACKAGE_FISCHSTAEBCHEN_OVERLAY
