@@ -57,6 +57,16 @@ if BR2_PACKAGE_FISCHSTAEBCHEN_INIT
 
 		default y
 
+	config BR2_PACKAGE_FISCHSTAEBCHEN_INIT_READ_PROC_CMDLINE
+		bool "read-proc-cmdline"
+
+		default y
+
+	config BR2_PACKAGE_FISCHSTAEBCHEN_INIT_READ_PROC_ENVIRON
+		bool "read-proc-environ"
+
+		default y
+
 	comment "untar needs tar (from busybox or package)"
 		depends on !BR2_PACKAGE_BUSYBOX && !BR2_PACKAGE_TAR
 
