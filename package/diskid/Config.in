@@ -1,0 +1,10 @@
+config BR2_PACKAGE_DISKID
+	bool "diskid"
+
+	help
+		`diskid` reads disk identifiers from devices and is a replacement for
+		udev's `ata_id` program. This is useful for creating /dev/disk/by-id/
+		links on systems where udev/systemd is not installed,
+		e.g. when /dev is managed by mdev or devtmpfs.
+
+		https://github.com/dywisor/diskid
